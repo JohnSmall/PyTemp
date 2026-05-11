@@ -1,7 +1,9 @@
 # CLAUDE.md — My Team AI
-# Source: MyTeamAI_TZ_v1.1.docx + confirmed context 16 April 2026
+# Source: MyTeamAI_TZ_v1.1.docx (16 Apr 2026) + Sprint 1 / P2-2 augmentation (10 May 2026).
 # Place this in the ROOT of the myteamai/ folder.
 # Claude Code reads CLAUDE.md automatically on startup.
+#
+# Authoritative state lives in Confluence (P2 space) — see PROJECT CONVENTIONS at end.
 
 ---
 
@@ -86,40 +88,57 @@ CRITICAL: Classifier is pure Python regex. NOT an AI call. Deterministic.
 KYC_STATUS:         \bkyc\b \baml\b \bcompliance\b \bdocuments?\s+outstanding\b
 REGISTER_APPLICANT: \bnew\s+applicant\b \bregister\s+applicant\b \bapplicant\s+intake\b
 MATCH_APPLICANTS:   \bmatch\s+applicants?\b \bfind\s+applicants?\b \bwho\s+fits\b \bsuitable\s+applicants?\b \bmatch\s+for\b
-VALUATION_BRIEF:    \bvaluation\s+brief(?:ing)?\b \bprepare\s+valuation\b \bcomparables?\b \bprice\s+valuation\b
+VALUATION_BRIEF:    \bvaluat(?:i)?on\s+brief(?:ing)?\b \bprepare\s+valuation\b \bcomparables?\b \bprice\s+valuation\b
 DRAFT_OUTREACH:     \bdraft\b \boutreach\b \bwrite\s+to\b \bcontact\b \bpersonalised?\s+(?:message|note|letter)\b
 WELCOME_CLIENT:     \bwelcome\b \bnew\s+client\b \bregister\s+client\b \bonboard\b
 
 Bug 1 fixed: Removed bare \bvaluation\b — was matching "Book a valuation appointment" wrongly
 Bug 2 fixed: Added \bcontact\b to DRAFT_OUTREACH — TS Section 4.3 keyword
+Bug 3 fixed: VALUATION_BRIEF regex now accepts the "valuaton" typo via \bvaluat(?:i)?on\b — answers spec open question #7 (typo tolerance) for M1.
+
+Context-aware UNKNOWN messages (app/classifier.py:83-128):
+- _GREETING_TOKENS  → "Hello! Here's what I can help you with:"
+- _THANKS_TOKENS    → "You're welcome! Let me know if you need anything else. Here's what I can help with:"
+- _ADDRESS_RE match → "I recognise that as a property address, but I'm not sure what you'd like me to do. Here's what I can help with:"
+- default           → "I couldn't understand that request. Here's what I can do:"
 
 ---
 
-## CURRENT STATUS (16 April 2026)
+## CURRENT STATUS (10 May 2026 — Sprint 1 / P2-2 gap analysis)
 
-DONE:
-- All 6 bot functions, classifier, schemas, services written
-- Login page built (step zero — John flagged as missing from TS)
-- Chat UI built, all 6 forms wired
-- BDD feature files and step definitions written
-- render.yaml and CI pipeline written
-- M1 test run: 49/49 passing
-- .gitignore pushed to GitHub
-- HubSpot Private App created, token obtained
-- Claude API key obtained
-- Both keys in local .env file
+DONE — M1 surface:
+- All 6 bot functions, classifier, schemas, services implemented in app/
+- Login page (frontend/index.html) + chat UI (frontend/chat.html) with all 6 forms
+- BDD test suite: tests/features/m1_intent_classification.feature + m1_validation.feature
+- pytest collection: 97 tests / 97 passing in ~0.25s
+- Frontend blur validation wired (frontend/chat.html:528-540) — see RESIDUAL DELTAS
+- Warm UNKNOWN messages for greetings / thanks / property addresses (classifier.py)
+- Typo tolerance for "valuaton brief" (classifier.py:55)
+- render.yaml at repo root pinning PYTHON_VERSION=3.11.9
+- Deployed to Render at https://myteamai.onrender.com  (M1 live)
+- M1 acceptance runbook ACCEPTANCE_TESTS_M1.md (20 April 2026)
+- Codebase pushed to origin git@github.com:JohnSmall/PyTemp.git (branches main + dev)
 
-IN PROGRESS:
-- Full codebase push to GitHub (only .gitignore pushed so far)
-- Render deployment
+DONE — M2 surface in-tree (not scored against M1, inherited for Sprint 2+):
+- Real Anthropic client with mock / real / record modes (app/clients/claude_client.py)
+- Free-text welcome via /bot/welcome-from-text with Claude-driven extraction
+- Real HubSpot integration for register / match / kyc (app/services/hubspot_service.py)
+- HubSpot custom-property bootstrap on FastAPI lifespan (app/main.py:45-57)
+- 13-property mirror script for Curtis Sloane's HubSpot custom properties (mirror_hubspot_structure.py)
+- HubSpot audit + ERD scripts (audit.py, erd.py)
 
-PENDING:
-- Run tests locally first
-- Push full code to GitHub
-- Deploy Render Blueprint
-- Add API keys to Render dashboard
-- Frontend blur validation (~30 min)
-- Book M1 demo with Olesya
+RESIDUAL DELTAS for M1 acceptance (Sprint 2 candidate tickets):
+- S2-1  Finding E — frontend/chat.html:535 blur emits "Required"; submit emits "Client name is required". Fix: align blur with submit. Gates Test 12 acceptance.
+- S2-2  Finding D — app/main.py:78-86 returns {status, error_code, message, capabilities}; spec §9 specifies {status, code, message, action}. Conformance work, not Test 11 blocker.
+- S2-3  Finding H — no ruff / mypy / pre-commit / playwright / .github CI configured. Sprint 2's first implementation ticket establishes the hard-gate baseline.
+- S2-4  Test 11 + Test 12 acceptance run with Olesya (TS §10.1: client runs tests, developer observes).
+- S2-5  Tag deployed commit (0.2.0) + write M1 close-out into PROGRESS.md.
+- S2-6  (deferred, M2) Tooling inheritance review for the M2 surface already in-tree.
+
+PENDING handover items:
+- HubSpot dev sandbox for John (mirror_hubspot_structure.py creates the 13 custom props once HUBSPOT_API_KEY points at the sandbox token; see HUBSPOT section above).
+- Duplicate Render URL https://myteamai-8l20.onrender.com to be cleaned up at S2-4.
+- Python local 3.13 vs deploy 3.11.9 — pin via .python-version (S) or ratify the drift at Sprint 2 setup.
 
 ---
 
@@ -133,55 +152,56 @@ M5  Live client   Switch HubSpot key to Curtis Sloane account
 
 ---
 
-## THREE OPEN GAPS (not M1 blockers)
+## OPEN GAPS RESOLVED IN dev (Sprint 1 / P2-2 Finding B)
 
-Gap 1: "Hello" should return warm message not cold error card
-       Decision needed from Olesya before implementing
+The three "open gaps" listed in the 16 April version of this file have all been implemented in dev:
 
-Gap 2: "valuaton brief" should still classify as VALUATION_BRIEF (typo tolerance)
-       Decision needed from John — in scope for MVP?
+Gap 1 (resolved): "Hello" / "Thanks" / property-address now return warm UNKNOWN messages.
+        Implemented in app/classifier.py:83-84,120-128 via _GREETING_TOKENS / _THANKS_TOKENS / _ADDRESS_RE.
+        Asserted by tests/features/m1_intent_classification.feature scenarios on lines 82-95.
 
-Gap 3: Frontend blur validation — errors must fire on tab-away not only submit
-       TS Section 6.2 explicit. ~30 min. Implementing today.
+Gap 2 (resolved): "valuaton brief" classifies as VALUATION_BRIEF.
+        Implemented in app/classifier.py:55 via the regex \bvaluat(?:i)?on\s+brief(?:ing)?\b.
+        Asserted by tests/features/m1_intent_classification.feature line 188 ("Typo tolerance — valuaton brief classified as VALUATION_BRIEF").
+        Reduces spec open question #7 to "ratify implemented behaviour" — ratified in Sprint 1 (P2-2 decisions section).
+
+Gap 3 (resolved): Frontend blur validation wired.
+        Implemented in frontend/chat.html:528-540 — explicit blur listeners on 13 required fields.
+        See RESIDUAL DELTAS above — blur message text is a small Sprint 2 follow-up (Finding E / S2-1), not a missing-feature gap.
 
 ---
 
-## STEP BY STEP — DO THIS NOW IN ORDER
+## LOCAL DEV — HOW TO RUN
 
-STEP 1: Run M1 tests locally (no internet needed)
-pip install pydantic pydantic-settings email-validator pytest pytest-bdd pytest-asyncio
-pytest tests/step_definitions/test_m1_intent.py -v --tb=short
-Expected: 49 passed in under 2 seconds
+Working venv at .venv/ (Python 3.13.13 local; deploy is 3.11.9 per render.yaml).
 
-STEP 2: Push full codebase to GitHub
-git add .
-git commit -m "feat: initial project — M1 classifier 49/49, all 6 functions, login page, Render config"
-git push origin main
-git checkout -b dev
-git push -u origin dev
+Run the M1 BDD suite:
+    .venv/bin/python -m pytest -q
+Expected: 97 passed in ~0.25s, no external services needed.
 
-STEP 3: Move render.yaml to repo root
-cp deployment/render.yaml ./render.yaml
-git add render.yaml
-git commit -m "chore: move render.yaml to root for Render Blueprint"
-git push origin main
+Run the FastAPI app locally:
+    .venv/bin/python -m uvicorn app.main:app --reload  --host 0.0.0.0 --port 8000
+    # or:  python -m app.main   (binds IPv6 :: by default per the __main__ block in app/main.py)
+Then:
+    http://localhost:8000/health  →  {"status":"ok","version":"1.1.0"}
+    http://localhost:8000/        →  login page
+    Login: agent@curtissloane.com / agent123   (hardcoded MVP — see CREDENTIALS above)
 
-STEP 4: Deploy on Render
-render.com → New → Blueprint → connect future-synch/myteamai
-Deploy Blueprint
-Environment tab → add manually:
-  ANTHROPIC_API_KEY = sk-ant-...
-  HUBSPOT_API_KEY   = pat-eu1-...
-JWT_SECRET is auto-generated — do not add
+Live deploy (M1 reference):
+    https://myteamai.onrender.com  (canonical)
+    https://myteamai-8l20.onrender.com  (duplicate to be cleaned up at S2-4)
 
-STEP 5: Verify
-https://myteamai.onrender.com/health → {"status": "ok", "version": "1.1.0"}
+M1 acceptance tests (run by Olesya per TS §10.1):
+    See ACCEPTANCE_TESTS_M1.md in repo root for the full runbook.
+    Test 11: "What is the weather in London?" → UNKNOWN_INTENT error card + capability list.
+    Test 12: submit welcome form with blank client_name → form does not submit; "Client name is required" on submit (Finding E: "Required" on blur — S2-1 fix forthcoming).
 
-STEP 6: Book M1 demo with Olesya
-Login: agent@curtissloane.com / agent123
-Test 11: type "What is the weather in London?" → UNKNOWN_INTENT error card
-Test 12: submit blank client_name → "Client name is required" inline
-Both pass = first payment released
+HubSpot dev sandbox setup (for John):
+    Create a developer HubSpot account, install a Private App with crm.objects.contacts.read/write + crm.schemas.contacts.read/write.
+    Set HUBSPOT_API_KEY in .env to the sandbox token.
+    Run: python mirror_hubspot_structure.py   → creates the 13 Curtis Sloane custom properties.
+    Then: python -m app.main   → lifespan hook creates the 11 MyTeamAI-internal properties.
+    Verify: python audit.py    → properties_audit.csv shows all 24 custom properties.
 
 ---
 
@@ -194,6 +214,48 @@ Both pass = first payment released
 - One big EOD commit (TS Section 13.1 violation)
 - Return raw JSON or stack traces to frontend
 - Store message content in session logs (TS Section 8)
+
+---
+
+## PROJECT CONVENTIONS (Sprint 1, 10 May 2026)
+
+Adopted at Sprint 1 / P2-2. Authoritative versions live in Confluence (P2 space); pointers here.
+
+Ticket lifecycle:
+- Working Procedure v17 — https://vidhya-trading.atlassian.net/wiki/spaces/P2/pages/153059329
+- AI-Assisted Development Workflow v2 — https://vidhya-trading.atlassian.net/wiki/spaces/P2/pages/153157633
+- Every ticket: /plan first (rule #2); single commit per ticket prefixed [P2-N] with semver tag (rule #5); ACs with reconciliation invariants (rule #6).
+- No autonomous Jira ticket creation by Claude Code (rule #8) — surface findings as Bug / Gap / Improvement / Question entries in docs/sprint_N_issues.md instead.
+
+Page-first reporting (rules #10, #14):
+- Each ticket gets a Confluence in-flight exchange page (child of the sprint page).
+- All substantive findings, decisions, /plan output, and verification-gate snapshots go on that page BEFORE chat-channel updates.
+- Newest entry at the top of Exchange section; preserve Decisions and Forward note sections on every page edit (Confluence updates are page-replace by default).
+- Gate output goes on the page verbatim (rule #14) before push approval is requested.
+
+Audit-trail-on-deviations (rules #11, #17):
+- Empirical surprises that materially shape an artefact get logged as Rule #11 candidate findings on the in-flight page BEFORE they shape the artefact.
+- PM ratification gates the move from "I found this" to "this is in the deliverable".
+- Findings A–K from P2-2 are the canonical example for this project — see in-flight page 152830004.
+
+Sprint closure (rule #18):
+- Last ticket of a sprint publishes docs/sprint_N_issues.md as a Confluence page "Sprint N Issues and Decisions" (child of the sprint page) BEFORE the close-out comment.
+- PM verifies the rollup page exists before clicking Complete Sprint in Jira.
+
+Compaction-readiness (rule #12):
+- At each ticket close, durable channels (in-flight page, docs/sprint_N_issues.md, CLAUDE.md, persistent memory) must be up to date before user-triggered compaction.
+- The final "ticket closed" page entry ends with a compaction-safe signal.
+
+Repository conventions:
+- Branches: main = production, dev = active development. No direct commits to main (TS §13.2).
+- Commits granular and conventional (TS §13.1). One ticket = one commit [P2-N]: ... + semver tag without leading v.
+- Hard gate tooling (TBD by S2-3): pytest, ruff format --check, ruff check, mypy. Currently only pytest is configured.
+
+External authoritative pointers:
+- Technical Spec v1.1 — https://vidhya-trading.atlassian.net/wiki/spaces/P2/pages/151420929
+- Acceptance Test 11 — https://vidhya-trading.atlassian.net/wiki/spaces/P2/pages/150536211
+- Acceptance Test 12 — https://vidhya-trading.atlassian.net/wiki/spaces/P2/pages/152010756
+- M1 Gap Analysis (published at P2-2 close) — child of Sprint 1 page 153518091
 
 ---
 
