@@ -170,3 +170,14 @@ if os.path.isdir("frontend"):
     @app.get("/chat")
     def chat():
         return FileResponse("frontend/chat.html")
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(
+        "app.main:app",
+        host=os.getenv("HOST", "::"),
+        port=int(os.getenv("PORT", "8000")),
+        reload=os.getenv("RELOAD", "true").lower() == "true",
+    )
