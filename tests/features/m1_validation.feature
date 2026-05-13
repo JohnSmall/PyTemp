@@ -227,3 +227,34 @@ Feature: M1 Input Validation
   Scenario: Validation error is logged without PII
     When the agent submits a welcome request with client_name blank
     Then the request is rejected with a validation error
+
+  # =====================================================
+  # SECTION 10: Frontend blur-time validation
+  # (AT 12 source-code regression-guard per spec §6.2)
+  # =====================================================
+  # These scenarios assert the literal text emitted by the
+  # frontend/chat.html blur handler for each required-field id.
+  # Static-source tests against the JS source — the @e2e
+  # browser-runtime version of AT 12 is a Sprint 3 candidate
+  # (after Playwright harness lands via P2-4).
+
+  @source-code-regression-guard
+  Scenario Outline: chat.html blur handler emits per-field validation text per spec §6.2
+    When the chat.html blur handler is examined for field "<field_id>"
+    Then the blur error text is "<expected_text>"
+
+    Examples:
+      | field_id            | expected_text                  |
+      | w-client_name       | Client name is required        |
+      | w-agent_name        | Agent name is required         |
+      | w-source            | Source is required             |
+      | m-property_ref      | Property reference is required |
+      | r-full_name         | Full name is required          |
+      | r-email             | Email is required              |
+      | r-phone             | Phone is required              |
+      | r-budget            | Budget is required             |
+      | r-bedrooms_min      | Bedrooms min is required       |
+      | r-financing         | Financing is required          |
+      | r-preferred_channel | Channel is required            |
+      | r-source            | Source is required             |
+      | k-name_or_id        | Name or email is required      |

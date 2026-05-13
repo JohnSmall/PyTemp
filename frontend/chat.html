@@ -525,6 +525,24 @@
       }
     }
 
+    // Per-field validation messages for blur-time empty-required-field errors.
+    // Aligned with submit-time text (chat.html:362-409) and spec §5.1.
+    const BLUR_REQUIRED_MESSAGES = {
+      'w-client_name':       'Client name is required',
+      'w-agent_name':        'Agent name is required',
+      'w-source':            'Source is required',
+      'm-property_ref':      'Property reference is required',
+      'r-full_name':         'Full name is required',
+      'r-email':             'Email is required',
+      'r-phone':             'Phone is required',
+      'r-budget':            'Budget is required',
+      'r-bedrooms_min':      'Bedrooms min is required',
+      'r-financing':         'Financing is required',
+      'r-preferred_channel': 'Channel is required',
+      'r-source':            'Source is required',
+      'k-name_or_id':        'Name or email is required',
+    };
+
     // Blur validation for required fields
     ['w-client_name','w-agent_name','w-source','m-property_ref',
      'r-full_name','r-email','r-phone','r-budget','r-bedrooms_min',
@@ -532,7 +550,7 @@
       const el = document.getElementById(id);
       if (!el) return;
       el.addEventListener('blur', () => {
-        if (!el.value.trim()) fieldError('err-' + id, 'Required');
+        if (!el.value.trim()) fieldError('err-' + id, BLUR_REQUIRED_MESSAGES[id] || 'Required');
       });
       el.addEventListener('input', () => {
         if (document.getElementById('err-' + id)?.textContent) fieldError('err-' + id, '');

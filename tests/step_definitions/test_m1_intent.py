@@ -6,6 +6,8 @@ Zero external services — pure Python.
 
 import sys
 import os
+import re
+from pathlib import Path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 import pytest
@@ -755,3 +757,30 @@ def step_structured_error(ctx):
         assert "loc"  in err
         assert "msg"  in err
         assert "type" in err
+
+
+# ===========================================================================
+# Section 10 — chat.html blur handler source-code regression-guard (AT 12)
+# ===========================================================================
+
+_CHAT_HTML_PATH = Path(__file__).resolve().parents[2] / "frontend" / "chat.html"
+
+
+def _extract_blur_message_for_field(field_id):
+    src = _CHAT_HTML_PATH.read_text(encoding="utf-8")
+    pattern = rf"['\"]{re.escape(field_id)}['\"]\s*:\s*['\"]([^'\"]+)['\"]"
+    m = re.search(pattern, src)
+    return m.group(1) if m else None
+
+
+@when(parsers.parse('the chat.html blur handler is examined for field "{field_id}"'))
+def step_examine_blur(ctx, field_id):
+    ctx.blur_message = _extract_blur_message_for_field(field_id)
+
+
+@then(parsers.parse('the blur error text is "{expected_text}"'))
+def step_assert_blur_text(ctx, expected_text):
+    assert ctx.blur_message == expected_text, (
+        f"chat.html blur handler emits {ctx.blur_message!r} for this field, "
+        f"expected {expected_text!r} per spec §6.2 / submit-time alignment"
+    )
