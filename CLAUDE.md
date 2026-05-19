@@ -251,6 +251,14 @@ Repository conventions:
 - Commits granular and conventional (TS §13.1). One ticket = one commit [P2-N]: ... + semver tag without leading v.
 - Hard gate tooling (TBD by S2-3): pytest, ruff format --check, ruff check, mypy. Currently only pytest is configured.
 
+Manual browser tests (Sprint 2 / P2-4, S2-3a):
+- Browser-interaction tests (a small fraction of the suite) are done MANUALLY on this project: Olesya's P2-5 wall-clock acceptance run, plus the Sprint 3 S2-8a `@manual` paradigm-comparison artefact (the `ACCEPTANCE_TESTS_M1.md` → `@manual` Gherkin conversion). There is no automated browser test harness in this repo.
+- Playwright-in-docker was tried in P2-4 and abandoned 2026-05-19: runtime version-coupling complexity (client/server version had to match exactly; `npx playwright run-server` drifted from the pinned base image once given registry access — Rule 11 candidate FF), and John could not get it working here or on another project. No `playwright` client dependency, no `tests/e2e/`, no `@e2e` marker on this project.
+- A separate spike project (John-owned, outside P2 scope) investigates Playwright alternatives. If it produces an adoption-ready approach, a new ticket lands on this project at that time. Until then, browser testing stays manual. See `docs/sprint_2_issues.md` "Playwright-in-docker abandoned" + P-18 (spike-before-implement) retro candidate.
+- P2-3's source-code regression-guard scenario (`@source-code-regression-guard`) continues to cover the static-source contract for AT 12; the runtime browser path is manual inspection only.
+- The dev container has the venv on PATH baked at image-build time via `Dockerfile.python` (`which python` → /workspace/Myteamai/.venv/bin/python); no `source .venv/bin/activate` ritual.
+- pytest tag routing (pytest.ini): `pytest` runs by default excluding only `@manual` (`addopts = -m "not manual"`); `pytest -m source-code-regression-guard` runs the P2-3 static-source guard; `pytest -m manual` runs Sprint 3's human Gherkin once it lands. Markers registered: `backend`, `manual`, `source-code-regression-guard`.
+
 External authoritative pointers:
 - Technical Spec v1.1 — https://vidhya-trading.atlassian.net/wiki/spaces/P2/pages/151420929
 - Acceptance Test 11 — https://vidhya-trading.atlassian.net/wiki/spaces/P2/pages/150536211

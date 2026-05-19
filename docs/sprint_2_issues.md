@@ -147,4 +147,41 @@ Defer refresh to P2-6 (sprint-close ticket, if scheduled) — sprint-close house
 
 ---
 
+### Issue: Q8 — PM-side vs CC-side rule #12 close-out for completed tickets
+
+**Source Ticket:** P2-4 brief 11553 (in-scope item 5); P2-3 DD-1 lineage
+**Type:** Question
+**Description:**
+The rule #12 end-of-ticket sequence (Jira transition → compaction-readiness check → convention drift check → sprint-closure gate → final page entry) is currently CC-driven. P2-3's DD-1 surfaced the related gap that Jira state transitions are John's manual action (rule #4: ticket moved To Do → In Progress before work). Open question for Sprint 2 retro: for completed tickets, should the rule #12 close-out be performed CC-side (self-check, as today) or PM-side (PM verifies + transitions), and where does the CC/PM/John responsibility boundary sit for the Jira transition specifically? The P2-4 brief DoD names this Q8 explicitly with an interim default: CC self-check unless John directs otherwise.
+
+**Recommendation:**
+Carry to Sprint 2 retrospective alongside DD-1 (rule #4 enforcement gap). Decide a single documented owner for each rule #12 step (especially the Jira transition) and codify in the Working Procedure or the kickoff templates. Interim: CC self-check per the brief DoD default.
+
+**Priority Hint:** Medium (process clarity; affects every ticket close).
+**Blocking?:** No (interim default operates; P2-4 close uses CC self-check).
+**Suggested Jira Ticket?:** No (Working Procedure / retro item, not a code ticket).
+
+---
+
+**Reconciliation note (P2-4 AC 5, 2026-05-18).** This file was bootstrapped at P2-3 close (commit `c460864`) before the P2-4 v2 brief enumerated its 6 expected entries. Five of the brief's six (DD-1, DD-2, P-15, DRY-consolidation, Render-auto-deploy-branch) were already present; the sixth (Q8, above) is appended by P2-4 §5. The three additional entries — `@source-code-regression-guard` marker registration, Playwright via docker-compose, `CLAUDE.md` CURRENT STATUS refresh — are legitimate carry-forward from P2-3's rule #12 self-check and are retained, not removed. Net P2-4 §5 change: one appended entry (Q8) + this note. Ratified Q-plan-2 on in-flight page 159154177.
+
+---
+
+### Issue: Playwright-in-docker abandoned 2026-05-19; spike to separate project
+
+**Source Ticket:** P2-4 (Rule 11 candidate FF + 2026-05-19 (latest) abandonment decision; in-flight page 159154177 Decisions entry)
+**Type:** Improvement
+**Status:** Abandoned-this-project + Spike-elsewhere
+**Description:**
+P2-4 attempted to stand up Playwright-in-docker (separate `playwright` Docker service, dev-container connects over `PLAYWRIGHT_WS_ENDPOINT`) and prove the harness with a smoke E2E test. The attempt produced repeated Rule 11 surprises over 7 days (2026-05-12 → 2026-05-19): the EAI_AGAIN npm-registry-fetch issue (resolved via dual-network attachment), an idle-timeout exit, the EE branch-state finding, and finally FF — a Playwright client/server version mismatch (running service v1.58 vs brief-pinned client v1.50.0; root cause: bare `npx playwright run-server` fetches the latest package from the registry once given outbound internet, drifting from the base image's pinned version). John could not get Playwright-in-docker working on this project or another of his projects. Decision (John, 2026-05-19): abandon Playwright-in-docker for this project; browser-interaction tests (a small fraction of the suite) are done manually instead; a separate spike project (John-owned, outside P2 scope) investigates alternatives. Spike results may inform a future ticket on this project.
+
+**Recommendation:**
+Browser-interaction testing on this project is manual: Olesya's P2-5 wall-clock acceptance run + the Sprint 3 S2-8a `@manual` paradigm-comparison artefact (the `ACCEPTANCE_TESTS_M1.md` → `@manual` Gherkin conversion). P2-3's source-code regression-guard scenario continues to cover the static-source contract for AT 12; the runtime browser path is manual. The `@e2e` marker and `tests/e2e/` are not introduced on this project (P2-4 §1/§2 reverted under the v3 amendment). If the spike project produces an adoption-ready approach, create a new ticket at that time. See also P-18 (spike-before-implement principle) — the durable process lesson is to spike novel infrastructure in a contained ticket before writing a normal implementation ticket.
+
+**Priority Hint:** Medium (closes a 7-day technology thread; informs P-18 retro candidate).
+**Blocking?:** No (P2-4 completes with reduced v3 scope; manual browser testing is the interim policy).
+**Suggested Jira Ticket?:** No (this project); a future ticket may be created if the separate spike succeeds.
+
+---
+
 _(Further entries below as Sprint 2 progresses through P2-4, P2-5, P2-6.)_
